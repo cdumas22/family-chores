@@ -4,6 +4,7 @@ import { Form, V2_MetaFunction, useLoaderData } from "@remix-run/react";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import EditChore from "~/components/EditChore";
 import prisma from "~/lib/db.server";
+import { parseISO } from 'date-fns'
 
 export const loader = async ({ params }: LoaderArgs) => {
   const data = {
@@ -17,7 +18,7 @@ type Chore = Prisma.ChoreGetPayload<{}>;
 export let action: ActionFunction = async ({ request, params }) => {
   if (request.method === "POST") {
     const data = await request.formData();
-    const { repeat, ...chore } = Object.fromEntries(data) as unknown as Chore;
+    const { repeat, order, timeOfDay, pointValue, startDate, endDate, ...chore } = Object.fromEntries(data) as unknown as Chore;
 
     const todo = await prisma.chore.findUnique({
       where: {
@@ -40,15 +41,21 @@ export let action: ActionFunction = async ({ request, params }) => {
       data: {
         ...chore,
         repeat: Number(repeat),
+        timeOfDay: Number(timeOfDay),
+        order: Number(order),
+        pointValue: Number(pointValue),
+        startDate: startDate ? parseISO(startDate).valueOf().toString() : null,
+        endDate: endDate ? parseISO(endDate).valueOf().toString() : null,
         updatedAt: new Date(),
       } as Chore,
     });
+    return redirect(`/person/${chore.personId}`);
   }
   if(request.method === 'DELETE') {
     await prisma.chore.delete({ where: { id: params.choreId }})
   }
+  return redirect(`/`)
 
-  return redirect("/");
 
   //   return null;
 };

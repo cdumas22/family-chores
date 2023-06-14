@@ -1,4 +1,4 @@
-import { Person, Prisma } from "@prisma/client";
+import { Person } from "@prisma/client";
 import { ActionFunction, LoaderArgs, json, redirect } from "@remix-run/node";
 import { Form, V2_MetaFunction, useLoaderData } from "@remix-run/react";
 import {
@@ -9,10 +9,12 @@ import {
   Form as BForm,
   Row,
   ListGroup,
-  Dropdown,
 } from "react-bootstrap";
-import EditChore from "~/components/EditChore";
 import prisma from "~/lib/db.server";
+import sortBy from "lodash/sortBy";
+import { ChoreLabel } from "~/components/PersonCard";
+import { format } from "date-fns";
+import { DAY, IsDayChecked } from "~/utils/days";
 
 export const loader = async ({ params }: LoaderArgs) => {
   const person = await prisma.person.findUnique({
@@ -27,14 +29,14 @@ export const loader = async ({ params }: LoaderArgs) => {
 export let action: ActionFunction = async ({ request, params }) => {
   if (request.method === "POST") {
     const data = await request.formData();
-    const {order, ...person} = Object.fromEntries(data) as unknown as Person;
+    const { order, ...person } = Object.fromEntries(data) as unknown as Person;
 
     const updatedPerson = await prisma.person.update({
       where: { id: params.personId },
       data: {
         ...person,
         order: Number(order),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
     });
 
@@ -54,9 +56,6 @@ export const meta: V2_MetaFunction = () => {
 export default () => {
   const person = useLoaderData<typeof loader>();
 
-  function deleteChore(chore: string) {
-    console.log(chore);
-  }
   return (
     <Container>
       <Row>
@@ -103,28 +102,65 @@ export default () => {
           </Form>
           <hr />
           <ListGroup>
-            {person.chores.map((chore) => (
+            {sortBy(person.chores, ['timeOfDay', "order"]).map((chore) => (
               <div>
                 <ListGroup.Item
                   key={chore.id}
-                  className="d-flex justify-content-between"
+                  className="d-flex justify-content-between align-items-center"
                 >
-                  <div className="fs-1 chore-icon">{chore.icon}</div>{" "}
-                  {chore.task}
-                  <Dropdown id="dropdown-basic">
-                    <Dropdown.Toggle variant="secondary" size="sm" />
-                    <Dropdown.Menu>
-                      <Dropdown.Item eventKey="1" href={`/chore/${chore.id}`}>
-                        Edit
-                      </Dropdown.Item>
-                      <Dropdown.Item
-                        eventKey="2"
-                        onClick={() => deleteChore(chore.id)}
-                      >
-                        Delete
-                      </Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
+                  <div>
+                    <ChoreLabel chore={chore} />
+                    <Row>
+                      <Col>
+                        <div className="badge rounded-pill bg-secondary">
+                          {chore.timeOfDay}
+                        </div>
+                      </Col>
+                      <Col>
+                        <div className="badge rounded-pill bg-secondary">
+                          Pts: {chore.pointValue}
+                        </div>
+                      </Col>
+                      <Col>
+                        {(!!chore.startDate || !!chore.endDate) && (
+                          <div>
+                            {chore.startDate
+                              ? format(
+                                  new Date(Number(chore.startDate)),
+                                  "MMM dd, yyyy"
+                                )
+                              : "No start"}{" "}
+                            -{" "}
+                            {chore.endDate
+                              ? format(
+                                  new Date(Number(chore.endDate)),
+                                  "MMM dd, yyyy"
+                                )
+                              : "No end"}
+                          </div>
+                        )}
+                      </Col>
+                      <Col>
+                        <div className="d-flex">
+                          {Object.entries(DAY).map(([key, value]) => (
+                            <div
+                              style={{ width: "25px", height: "25px" }}
+                              className={`border border-1 pr-2 rounded-circle text-uppercase text-center ${
+                                IsDayChecked(chore.repeat, value)
+                                  ? "bg-success text-light"
+                                  : ""
+                              }`}
+                            >
+                              {key.substring(0, 1)}
+                            </div>
+                          ))}
+                        </div>
+                      </Col>
+                    </Row>
+                  </div>
+                  <Button variant="secondary" href={`/chore/${chore.id}`}>
+                    ✏️
+                  </Button>
                 </ListGroup.Item>
               </div>
             ))}

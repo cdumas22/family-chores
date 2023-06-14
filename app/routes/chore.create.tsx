@@ -17,12 +17,17 @@ export const loader = async ({ params }: LoaderArgs) => {
 export const action: ActionFunction = async ({ request, params }) => {
   if (request.method === "POST") {
     const data = await request.formData();
-    const { repeat, ...chore } = Object.fromEntries(data) as unknown as Chore;
+    const { repeat, order, timeOfDay, pointValue, startDate, endDate, ...chore } = Object.fromEntries(data) as unknown as Chore;
 
     await prisma.chore.create({
       data: {
         ...chore,
         repeat: Number(repeat),
+        order: Number(order),
+        pointValue: Number(pointValue),
+        timeOfDay: Number(timeOfDay),
+        startDate: startDate ? new Date(startDate).valueOf().toString() : null,
+        endDate: endDate ? new Date(endDate).valueOf().toString() : null,
         createdAt: new Date(),
         updatedAt: new Date(),
       } as Chore,

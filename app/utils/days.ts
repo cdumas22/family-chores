@@ -7,6 +7,11 @@ export const DAY = {
     saturday: 1 << 5,
     sunday: 1 << 6
 }
+export enum TIME_OF_DAY {
+    morning = 1,
+    afternoon = 2,
+    evening = 3,
+}
 export const EVERY_DAY = Object.values(DAY).reduce((x, y) => x | y, 0);
 export function DayValue(days: number[]) {
     return days.reduce((x, y) => x | y)

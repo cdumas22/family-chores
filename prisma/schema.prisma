@@ -18,9 +18,11 @@ model Chore {
   pointValue   Int           @default(1)
   order        Int           @default(1)
   icon         String        @default("")
-  timeOfDay    String        @default("")
+  timeOfDay    Int        @default(1)
   // this is a bitwise of the days enum
   repeat    Int
+  startDate    String?
+  endDate      String?
   person       Person?       @relation(fields: [personId], references: [id])
   personId     String?
   chore_status Chore_Status[]
@@ -33,6 +35,7 @@ model Chore_Status {
   chore     Chore    @relation(fields: [choreId], references: [id], onDelete: Cascade)
   choreId   String
   date      String
+  pointValue  Int @default(0)
   completed Boolean  @default(false)
 }
 

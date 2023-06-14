@@ -7,12 +7,13 @@ import { MdCheckCircleOutline } from "react-icons/md";
 import { MdCheckCircle } from "react-icons/md";
 import { useChoreContext } from "~/root";
 import type { personLoader } from "~/routes/_index";
+import { TIME_OF_DAY } from "~/utils/days";
 
 type Person = SerializeFrom<personLoader>[number];
 
-function ChoreLabel({ chore }: { chore: Person["chores"][number] }) {
+export function ChoreLabel({ chore }: { chore: Person["chores"][string][number] }) {
   return (
-    <div className="d-flex align-items-center" style={{ gap: "10px" }}>
+    <div className="d-flex align-items-center text-reset" style={{ gap: "10px" }}>
       {chore.icon ? (
         <div className="fs-2">{chore.icon}</div>
       ) : chore.status?.completed ? (
@@ -31,36 +32,10 @@ function ChoreLabel({ chore }: { chore: Person["chores"][number] }) {
   );
 }
 
-function EditBtn({ chore }: { chore: Person["chores"][number] }) {
-  return (
-    <Button
-      variant="secondary"
-      href={`/chore/${chore.id}`}
-      style={{
-        position: "absolute",
-        top: 0,
-        right: 0,
-        margin: "0.25rem",
-        background: "white",
-        border: "none",
-      }}
-      size="sm"
-    >
-      ✏️
-    </Button>
-  );
-}
-
-export default function ({
-  person,
-  onDeleteChore: deleteChore,
-}: {
-  person: Person;
-  onDeleteChore: (choreId: string) => void;
-}) {
-  const todo = person.chores.filter((x) => !x.status?.completed);
-  const done = person.chores.filter((x) => !!x.status?.completed);
-  const percentage = (done.length / person.chores.length) * 100;
+export default function ({ person }: { person: Person }) {
+  const allChores = Object.values(person.chores).flat();
+  const done = allChores.filter((x) => !!x.status?.completed);
+  const percentage = (done.length / allChores.length) * 100;
   const progressStyles = { width: "115px", margin: "auto" };
   const choreContext = useChoreContext();
   const listStyles = {
@@ -108,62 +83,75 @@ export default function ({
             </div>
 
             <div className="fw-lighter" style={{ textAlign: "center" }}>
-              {done.length} of {person.chores.length} Complete
+              {done.length} of {allChores.length} Complete
             </div>
           </Card.Title>
         </Card.Body>
         <div style={{ overflow: "auto" }} className="p-3 pt-0">
-          TO-DO
-          {todo.length ? (
-            <ListGroup>
-              {todo.map((chore) => (
-                <ListGroup.Item
-                  key={chore.id}
-                  style={listStyles}
-                  className="d-flex justify-content-between"
-                >
-                  <Form method="put">
-                    <input hidden name="complete" defaultValue={chore.id} />
-                    <button
-                      style={buttonStyles as any}
-                      type="submit"
-                      onClick={onDone}
-                    >
-                      <ChoreLabel chore={chore} />
-                    </button>
-                  </Form>
-                  <EditBtn chore={chore} />
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
+          {allChores.length === 0 ? (
+            <div className="fs-4 text-center">🎉 No Chores TODAY 🎉 </div>
           ) : (
-            <div className="fs-3 text-center">🎉 All Done 🎉 </div>
-          )}
-          COMPLETED
-          {done.length ? (
-            <ListGroup>
-              {done.map((chore) => (
-                <ListGroup.Item
-                  key={chore.id}
-                  style={listStyles}
-                  className="d-flex justify-content-between bg-light"
-                >
-                  <Form method="put">
-                    <input hidden name="complete" defaultValue={chore.id} />
-                    <button
-                      style={buttonStyles as any}
-                      type="submit"
-                      className="text-muted"
-                    >
-                      <ChoreLabel chore={chore} />
-                    </button>
-                  </Form>
-                  <EditBtn chore={chore} />
-                </ListGroup.Item>
+            <div>
+              {Object.entries(person.chores).map(([key, chores]) => (
+                <div key={`TIME${TIME_OF_DAY[Number(key)]}`}>
+                  <div className="fw-bold lh-lg text-uppercase">{TIME_OF_DAY[Number(key)]}</div>
+                  {chores.filter(x => !x.status?.completed).length ? (
+                    <ListGroup>
+                      {chores.filter(x => !x.status?.completed).map((chore) => (
+                        <ListGroup.Item
+                          key={chore.id}
+                          style={listStyles}
+                          className="d-flex justify-content-between"
+                        >
+                          <Form method="put" className="d-block w-100 h-100">
+                            <input
+                              hidden
+                              name="complete"
+                              defaultValue={chore.id}
+                            />
+                            <button
+                              style={buttonStyles as any}
+                              type="submit"
+                              onClick={onDone}
+                            >
+                              <ChoreLabel chore={chore} />
+                            </button>
+                          </Form>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
+                  ) : (
+                    <div className="fs-3 text-center">🎉 All Done 🎉 </div>
+                  )}
+                </div>
               ))}
-            </ListGroup>
-          ) : (
-            <div>Get working!</div>
+              <hr/>
+              <div className="fw-bold lh-lg text-uppercase">COMPLETED</div>
+              {done.length ? (
+                <ListGroup>
+                  {done.map((chore) => (
+                    <ListGroup.Item
+                      key={chore.id}
+                      style={listStyles}
+                      className="d-flex justify-content-between bg-light"
+                    >
+                      <Form method="put" className="d-block w-100 h-100">
+                        <input hidden name="complete" defaultValue={chore.id} />
+                        <button
+                          style={buttonStyles as any}
+                          type="submit"
+                          className="text-muted"
+                        >
+                          <ChoreLabel chore={chore} />
+                        </button>
+                      </Form>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              ) : (
+                <div>Get working!</div>
+              )}
+            </div>
           )}
         </div>
       </Card>

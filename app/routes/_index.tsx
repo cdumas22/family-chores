@@ -1,19 +1,29 @@
 import { ActionFunction, V2_MetaFunction, json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { Button, Container, Row } from "react-bootstrap";
+import { Button, ButtonGroup, Container, Row } from "react-bootstrap";
 import ChoreComplete from "~/components/ChoreComplete";
 import PersonCard from "~/components/PersonCard";
 import prisma from "~/lib/db.server";
 import { useChoreContext } from "~/root";
-import { startOfDay } from "date-fns";
+import { endOfDay, parse, startOfDay } from "date-fns";
 import { DAY, IsDayChecked } from "~/utils/days";
+import groupBy from "lodash/groupBy";
+import orderBy from "lodash/orderBy";
 
 export type personLoader = typeof loader;
 export const loader = async () => {
   const d = startOfDay(new Date());
   const data = {
     people: await prisma.person.findMany({ orderBy: [{ order: "asc" }] }),
-    chores: await prisma.chore.findMany(),
+    chores: await prisma.chore.findMany({
+      where: {
+        AND: [
+          {
+            startDate: {},
+          },
+        ],
+      },
+    }),
     choreStatus: await prisma.chore_Status.findMany({
       where: {
         AND: [
@@ -28,13 +38,30 @@ export const loader = async () => {
   return json(
     data.people.map((x) => ({
       ...x,
-      chores: data.chores.flatMap((y) => {
-        if (!IsDayChecked(y.repeat, Object.values(DAY)[d.getDay() - 1]))
-          return [];
-        return y.personId === x.id
-          ? [{ ...y, status: data.choreStatus.find((z) => z.choreId === y.id) }]
-          : [];
-      }),
+      chores: groupBy(
+        orderBy(
+          data.chores.flatMap((y) => {
+            const status = data.choreStatus.find((z) => z.choreId === y.id);
+            if (
+              y.startDate != null &&
+              y.endDate != null &&
+              !(
+                d.valueOf() >= Number(y.startDate) &&
+                new Date() <= endOfDay(new Date(Number(y.endDate)))
+              )
+            )
+              return [];
+
+            return y.personId === x.id &&
+              (y.repeat === 0 ||
+                IsDayChecked(y.repeat, Object.values(DAY)[d.getDay() - 1]))
+              ? [{ ...y, status }]
+              : [];
+          }),
+          ["timeOfDay", "order"]
+        ),
+        "timeOfDay"
+      ),
     }))
   );
 };
@@ -73,10 +100,14 @@ export let action: ActionFunction = async ({ request }) => {
 
   // Create or update status
   if (choreStatus == null) {
+    const chore = await prisma.chore.findUnique({
+      where: { id: completeTodoId },
+    });
     const created = await prisma.chore_Status.create({
       data: {
         date: d.valueOf().toString(),
         choreId: completeTodoId,
+        pointValue: chore?.pointValue,
         completed: true,
       },
     });
@@ -98,10 +129,6 @@ export default function Index() {
   const people = useLoaderData<personLoader>();
   const choreContext = useChoreContext();
 
-  function deleteChore(choreId: string) {
-    console.log("delete", choreId);
-  }
-
   return (
     <Container
       fluid
@@ -115,15 +142,10 @@ export default function Index() {
       {choreContext.choreComplete && <ChoreComplete />}
       <Row style={{ flexWrap: "nowrap" }} className="h-100">
         {people.map((person) => (
-          <PersonCard
-            key={person.id}
-            person={person}
-            onDeleteChore={deleteChore}
-          />
+          <PersonCard key={person.id} person={person} />
         ))}
       </Row>
-      <Button
-        href="chore/create"
+      <ButtonGroup
         style={{
           position: "fixed",
           bottom: 0,
@@ -132,8 +154,11 @@ export default function Index() {
           opacity: 0.5,
         }}
       >
-        Add
-      </Button>
+        <Button variant="secondary" href="/">
+          Refresh
+        </Button>
+        <Button href="chore/create">+ Add</Button>
+      </ButtonGroup>
     </Container>
   );
 }
