@@ -12,20 +12,20 @@ import {
 import bootstrap from "bootstrap/dist/css/bootstrap.min.css";
 import { createContext } from "react";
 import reactCircularProgress from "react-circular-progressbar/dist/styles.css";
+import SSRProvider from "react-bootstrap/SSRProvider";
 
-export const links: LinksFunction = () => ([
+export const links: LinksFunction = () => [
   // { rel: "stylesheet", href: cssBundleHref },
   { rel: "stylesheet", href: bootstrap },
   { rel: "stylesheet", href: reactCircularProgress },
-]);
+];
 
-const defaultChoreContext: { choreComplete: boolean; choreColor?: string} = {
+const defaultChoreContext: { choreComplete: boolean; choreColor?: string } = {
   choreComplete: false,
-  choreColor: undefined
+  choreColor: undefined,
 };
 
 const choreContext = createContext(defaultChoreContext);
-
 
 export function useChoreContext() {
   return useOutletContext<typeof defaultChoreContext>();
@@ -40,7 +40,9 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet context={choreContext} />
+        <SSRProvider>
+          <Outlet context={choreContext} />
+        </SSRProvider>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
