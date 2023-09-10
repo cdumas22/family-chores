@@ -1,65 +1,61 @@
-# syntax = docker/dockerfile:1
+# base node image
+FROM node:16-bullseye-slim as base
 
-# Adjust NODE_VERSION as desired
-ARG NODE_VERSION=18.16.0
-FROM node:${NODE_VERSION}-slim as base
+# set for base and all layer that inherit from it
+ENV NODE_ENV production
 
-LABEL fly_launch_runtime="Remix/Prisma"
+# Install openssl for Prisma
+RUN apt-get update && apt-get install -y openssl sqlite3
 
-# Remix/Prisma app lives here
+# Install all node_modules, including dev dependencies
+FROM base as deps
+
 WORKDIR /app
 
-# Set production environment
-ENV NODE_ENV="production"
+ADD package.json .npmrc ./
+RUN npm install --include=dev
 
+# Setup production node_modules
+FROM base as production-deps
 
-# Throw-away build stage to reduce size of final image
-FROM base as build
+WORKDIR /family-chores
 
-# Install packages needed to build node modules
-RUN apt-get update -qq && \
-    apt-get install -y build-essential openssl pkg-config python-is-python3
-
-# Install node modules
-COPY --link package-lock.json package.json ./
-RUN npm ci --include=dev
-
-# Generate Prisma Client
-COPY --link prisma .
-RUN npx prisma generate
-
-# Copy application code
-COPY --link . .
-
-# Build application
-RUN npm run build
-
-# Remove development dependencies
+COPY --from=deps /family-chores/node_modules /family-chores/node_modules
+ADD package.json .npmrc ./
 RUN npm prune --omit=dev
 
+# Build the app
+FROM base as build
 
-# Final stage for app image
+WORKDIR /family-chores
+
+COPY --from=deps /family-chores/node_modules /family-chores/node_modules
+
+ADD prisma .
+RUN npx prisma generate
+
+ADD . .
+RUN npm run build
+
+# Finally, build the production image with minimal footprint
 FROM base
 
-# Install packages needed for deployment
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y openssl sqlite3 && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
-
-# Copy built application
-COPY --from=build /app /app
-
-# Setup sqlite3 on a separate volume
-RUN mkdir -p /data
-VOLUME /data
+ENV DATABASE_URL=file:/data/sqlite.db
+ENV PORT="8080"
+ENV NODE_ENV="production"
 
 # add shortcut for connecting to database CLI
 RUN echo "#!/bin/sh\nset -x\nsqlite3 \$DATABASE_URL" > /usr/local/bin/database-cli && chmod +x /usr/local/bin/database-cli
 
-# Entrypoint prepares the database.
-ENTRYPOINT [ "/app/docker-entrypoint.js" ]
+WORKDIR /family-chores
 
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-ENV DATABASE_URL="file:///data/sqlite.db"
-CMD [ "npm", "run", "start" ]
+COPY --from=production-deps /family-chores/node_modules /family-chores/node_modules
+COPY --from=build /family-chores/node_modules/.prisma /family-chores/node_modules/.prisma
+
+COPY --from=build /family-chores/build /family-chores/build
+COPY --from=build /family-chores/public /family-chores/public
+COPY --from=build /family-chores/package.json /family-chores/package.json
+COPY --from=build /family-chores/start.sh /family-chores/start.sh
+COPY --from=build /family-chores/prisma /family-chores/prisma
+
+ENTRYPOINT [ "./start.sh" ]
