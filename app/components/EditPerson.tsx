@@ -1,8 +1,14 @@
-import { Person } from "@prisma/client";
+import type { Group, Person } from "@prisma/client";
 import { Form } from "@remix-run/react";
 import { Button, FloatingLabel, Form as BForm } from "react-bootstrap";
 
-export default function EditPerson({ person }: { person?: Person }) {
+export default function EditPerson({
+  person,
+  groups,
+}: {
+  person?: Person;
+  groups: Group[];
+}) {
   return (
     <Form method="POST">
       <FloatingLabel controlId="person.name" label="Task" className="mb-3">
@@ -25,6 +31,20 @@ export default function EditPerson({ person }: { person?: Person }) {
           defaultValue={person?.order}
         />
       </FloatingLabel>
+      <BForm.Group className="mb-3" controlId="person.group">
+        <BForm.Label>Person Group</BForm.Label>
+        <BForm.Select
+          required
+          name="groupId"
+          defaultValue={person?.groupId ?? ""}
+        >
+          {groups.map((group) => (
+            <option key={group.id} value={group.id}>
+              {group.groupName}
+            </option>
+          ))}
+        </BForm.Select>
+      </BForm.Group>
       <Button type="submit">Save</Button>
     </Form>
   );

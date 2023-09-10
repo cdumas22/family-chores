@@ -1,13 +1,19 @@
-import { Prisma } from "@prisma/client";
+import { type Prisma } from "@prisma/client";
 import { useState } from "react";
 import { Form } from "react-bootstrap";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
 import { DAY, EVERY_DAY, IsDayChecked, TIME_OF_DAY } from "~/utils/days";
-import { format } from 'date-fns';
+import { format } from "date-fns";
 
 type Chore = Prisma.ChoreGetPayload<{}>;
 type Person = Prisma.PersonGetPayload<{}>;
-export default ({ chore, people }: { chore?: Chore; people: Person[] }) => {
+export default function EditChore({
+  chore,
+  people,
+}: {
+  chore?: Chore;
+  people: Person[];
+}) {
   const [repeat, setRepeat] = useState(chore?.repeat ?? 0);
 
   return (
@@ -37,8 +43,18 @@ export default ({ chore, people }: { chore?: Chore; people: Person[] }) => {
           ))}
         </Form.Select>
       </Form.Group>
-      <FloatingLabel controlId="chore.pointValue" label="Points" className="mb-3">
-        <Form.Control required min="1" type="number" name="pointValue" defaultValue={chore?.pointValue ?? 1} />
+      <FloatingLabel
+        controlId="chore.pointValue"
+        label="Points"
+        className="mb-3"
+      >
+        <Form.Control
+          required
+          min="1"
+          type="number"
+          name="pointValue"
+          defaultValue={chore?.pointValue ?? 1}
+        />
       </FloatingLabel>
       <Form.Group className="mb-3" controlId="chore.timeOfDay">
         <Form.Label>Time of day</Form.Label>
@@ -52,26 +68,41 @@ export default ({ chore, people }: { chore?: Chore; people: Person[] }) => {
           <option value={TIME_OF_DAY.evening}>Evening</option>
         </Form.Select>
       </Form.Group>
-      <FloatingLabel
-        controlId="chore.order"
-        label="Order"
-        className="mb-3"
-      >
-        <Form.Control name="order" type="number" min="1" defaultValue={chore?.order || 1} />
+      <FloatingLabel controlId="chore.order" label="Order" className="mb-3">
+        <Form.Control
+          name="order"
+          type="number"
+          min="1"
+          defaultValue={chore?.order || 1}
+        />
       </FloatingLabel>
       <FloatingLabel
         controlId="chore.startDate"
         label="Start Date (optional)"
         className="mb-3"
       >
-        <Form.Control name="startDate" type="date" defaultValue={chore?.startDate ? format(Number(chore?.startDate), 'yyyy-MM-dd'): ''} />
+        <Form.Control
+          name="startDate"
+          type="date"
+          defaultValue={
+            chore?.startDate
+              ? format(Number(chore?.startDate), "yyyy-MM-dd")
+              : ""
+          }
+        />
       </FloatingLabel>
       <FloatingLabel
         controlId="chore.endDate"
         label="End Date (optional)"
         className="mb-3"
       >
-        <Form.Control name="endDate" type="date" defaultValue={chore?.endDate ? format(Number(chore?.endDate), 'yyyy-MM-dd'): ''} />
+        <Form.Control
+          name="endDate"
+          type="date"
+          defaultValue={
+            chore?.endDate ? format(Number(chore?.endDate), "yyyy-MM-dd") : ""
+          }
+        />
       </FloatingLabel>
       <Form.Group>
         <Form.Label>Days</Form.Label>
@@ -95,7 +126,6 @@ export default ({ chore, people }: { chore?: Chore; people: Person[] }) => {
           />
         ))}
       </Form.Group>
-      
     </>
   );
-};
+}

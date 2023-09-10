@@ -1,30 +1,31 @@
-import { Person } from "@prisma/client";
-import { ActionFunction, LoaderArgs, json, redirect } from "@remix-run/node";
-import { Form, V2_MetaFunction, useLoaderData } from "@remix-run/react";
+import type { Group, Person } from "@prisma/client";
 import {
-  Button,
-  Col,
-  Container,
-  FloatingLabel,
-  Form as BForm,
-  Row,
-  ListGroup,
-} from "react-bootstrap";
+  type ActionFunction,
+  type LoaderArgs,
+  json,
+  redirect,
+} from "@remix-run/node";
+import { type V2_MetaFunction, useLoaderData } from "@remix-run/react";
+import { Button, Col, Container, Row, ListGroup } from "react-bootstrap";
 import prisma from "~/lib/db.server";
 import sortBy from "lodash/sortBy";
 import { ChoreLabel } from "~/components/PersonCard";
 import { format } from "date-fns";
 import { DAY, IsDayChecked } from "~/utils/days";
 import EditPerson from "~/components/EditPerson";
+import { requireUserId } from "~/utils/session.server";
 
-export const loader = async ({ params }: LoaderArgs) => {
+export const loader = async ({ params, request }: LoaderArgs) => {
+  const userId = await requireUserId(request);
+
+  const groups = await prisma.group.findMany({ where: { userId } });
   const person = await prisma.person.findUnique({
     where: { id: params.personId },
     include: { chores: true },
   });
   if (person == null) throw new Error("not found");
 
-  return json(person);
+  return json({ person, groups });
 };
 
 export let action: ActionFunction = async ({ request, params }) => {
@@ -32,7 +33,7 @@ export let action: ActionFunction = async ({ request, params }) => {
     const data = await request.formData();
     const { order, ...person } = Object.fromEntries(data) as unknown as Person;
 
-    const updatedPerson = await prisma.person.update({
+    await prisma.person.update({
       where: { id: params.personId },
       data: {
         ...person,
@@ -41,7 +42,7 @@ export let action: ActionFunction = async ({ request, params }) => {
       },
     });
 
-    return json(updatedPerson, 201);
+    return redirect("/");
   }
 
   //   return null;
@@ -55,7 +56,7 @@ export const meta: V2_MetaFunction = () => {
 };
 
 export default () => {
-  const person = useLoaderData<typeof loader>();
+  const { person, groups } = useLoaderData<typeof loader>();
 
   return (
     <Container>
@@ -66,7 +67,10 @@ export default () => {
       </Row>
       <Row>
         <Col>
-          <EditPerson person={person as unknown as Person} />
+          <EditPerson
+            person={person as unknown as Person}
+            groups={groups as unknown as Group[]}
+          />
           <hr />
           <ListGroup>
             {sortBy(person.chores, ["timeOfDay", "order"]).map((chore) => (

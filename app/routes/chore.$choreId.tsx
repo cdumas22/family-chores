@@ -1,12 +1,20 @@
-import { Prisma } from "@prisma/client";
-import { ActionFunction, LoaderArgs, json, redirect } from "@remix-run/node";
-import { Form, V2_MetaFunction, useLoaderData } from "@remix-run/react";
+import { type Prisma } from "@prisma/client";
+import {
+  type ActionFunction,
+  type LoaderArgs,
+  json,
+  redirect,
+} from "@remix-run/node";
+import { Form, type V2_MetaFunction, useLoaderData } from "@remix-run/react";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import EditChore from "~/components/EditChore";
 import prisma from "~/lib/db.server";
-import { parseISO } from 'date-fns'
+import { parseISO } from "date-fns";
+import { requireUserId } from "~/utils/session.server";
 
-export const loader = async ({ params }: LoaderArgs) => {
+export const loader = async ({ params, request }: LoaderArgs) => {
+  await requireUserId(request);
+
   const data = {
     chore: await prisma.chore.findUnique({ where: { id: params.choreId } }),
     people: await prisma.person.findMany({}),
@@ -18,7 +26,15 @@ type Chore = Prisma.ChoreGetPayload<{}>;
 export let action: ActionFunction = async ({ request, params }) => {
   if (request.method === "POST") {
     const data = await request.formData();
-    const { repeat, order, timeOfDay, pointValue, startDate, endDate, ...chore } = Object.fromEntries(data) as unknown as Chore;
+    const {
+      repeat,
+      order,
+      timeOfDay,
+      pointValue,
+      startDate,
+      endDate,
+      ...chore
+    } = Object.fromEntries(data) as unknown as Chore;
 
     const todo = await prisma.chore.findUnique({
       where: {
@@ -51,11 +67,10 @@ export let action: ActionFunction = async ({ request, params }) => {
     });
     return redirect(`/person/${chore.personId}`);
   }
-  if(request.method === 'DELETE') {
-    await prisma.chore.delete({ where: { id: params.choreId }})
+  if (request.method === "DELETE") {
+    await prisma.chore.delete({ where: { id: params.choreId } });
   }
-  return redirect(`/`)
-
+  return redirect(`/`);
 
   //   return null;
 };
@@ -82,9 +97,10 @@ export default () => {
           <Form method="POST">
             <EditChore chore={chore as any} people={people as any} />
             <Button type="submit">Save</Button>
-            <Button variant="danger" type="submit" formMethod="DELETE">Delete</Button>
+            <Button variant="danger" type="submit" formMethod="DELETE">
+              Delete
+            </Button>
           </Form>
-          
         </Col>
       </Row>
     </Container>

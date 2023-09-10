@@ -6,14 +6,21 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { MdCheckCircleOutline } from "react-icons/md";
 import { MdCheckCircle } from "react-icons/md";
 import { useChoreContext } from "~/root";
-import type { personLoader } from "~/routes/_index";
+import type { personLoader } from "~/routes/group.$groupId";
 import { TIME_OF_DAY } from "~/utils/days";
 
 type Person = SerializeFrom<personLoader>[number];
 
-export function ChoreLabel({ chore }: { chore: Person["chores"][string][number] }) {
+export function ChoreLabel({
+  chore,
+}: {
+  chore: Person["chores"][string][number];
+}) {
   return (
-    <div className="d-flex align-items-center text-reset" style={{ gap: "10px" }}>
+    <div
+      className="d-flex align-items-center text-reset"
+      style={{ gap: "10px" }}
+    >
       {chore.icon ? (
         <div className="fs-2">{chore.icon}</div>
       ) : chore.status?.completed ? (
@@ -94,38 +101,42 @@ export default function ({ person }: { person: Person }) {
             <div>
               {Object.entries(person.chores).map(([key, chores]) => (
                 <div key={`TIME${TIME_OF_DAY[Number(key)]}`}>
-                  <div className="fw-bold lh-lg text-uppercase">{TIME_OF_DAY[Number(key)]}</div>
-                  {chores.filter(x => !x.status?.completed).length ? (
+                  <div className="fw-bold lh-lg text-uppercase">
+                    {TIME_OF_DAY[Number(key)]}
+                  </div>
+                  {chores.filter((x) => !x.status?.completed).length ? (
                     <ListGroup>
-                      {chores.filter(x => !x.status?.completed).map((chore) => (
-                        <ListGroup.Item
-                          key={chore.id}
-                          style={listStyles}
-                          className="d-flex justify-content-between"
-                        >
-                          <Form method="put" className="d-block w-100 h-100">
-                            <input
-                              hidden
-                              name="complete"
-                              defaultValue={chore.id}
-                            />
-                            <button
-                              style={buttonStyles as any}
-                              type="submit"
-                              onClick={onDone}
-                            >
-                              <ChoreLabel chore={chore} />
-                            </button>
-                          </Form>
-                        </ListGroup.Item>
-                      ))}
+                      {chores
+                        .filter((x) => !x.status?.completed)
+                        .map((chore) => (
+                          <ListGroup.Item
+                            key={chore.id}
+                            style={listStyles}
+                            className="d-flex justify-content-between"
+                          >
+                            <Form method="put" className="d-block w-100 h-100">
+                              <input
+                                hidden
+                                name="complete"
+                                defaultValue={chore.id}
+                              />
+                              <button
+                                style={buttonStyles as any}
+                                type="submit"
+                                onClick={onDone}
+                              >
+                                <ChoreLabel chore={chore} />
+                              </button>
+                            </Form>
+                          </ListGroup.Item>
+                        ))}
                     </ListGroup>
                   ) : (
                     <div className="fs-3 text-center">🎉 All Done 🎉 </div>
                   )}
                 </div>
               ))}
-              <hr/>
+              <hr />
               <div className="fw-bold lh-lg text-uppercase">COMPLETED</div>
               {done.length ? (
                 <ListGroup>

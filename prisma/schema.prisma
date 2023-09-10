@@ -41,4 +41,26 @@ model Person {
   color     String   @default("")
   order     Int      @default(1)
   chores    Chore[]
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model Group {
+  id        String   @id @default(uuid())
+  groupName String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDefault Boolean
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Person    Person[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  groups       Group[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  username     String   @unique
+  passwordHash String
 }
