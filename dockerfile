@@ -18,18 +18,18 @@ RUN npm install --include=dev
 # Setup production node_modules
 FROM base as production-deps
 
-WORKDIR /family-chores
+WORKDIR .
 
-COPY --from=deps /family-chores/node_modules /family-chores/node_modules
+COPY --from=deps ./node_modules ./node_modules
 ADD package.json .npmrc ./
 RUN npm prune --omit=dev
 
 # Build the app
 FROM base as build
 
-WORKDIR /family-chores
+WORKDIR .
 
-COPY --from=deps /family-chores/node_modules /family-chores/node_modules
+COPY --from=deps ./node_modules ./node_modules
 
 ADD prisma .
 RUN npx prisma generate
@@ -47,15 +47,15 @@ ENV NODE_ENV="production"
 # add shortcut for connecting to database CLI
 RUN echo "#!/bin/sh\nset -x\nsqlite3 \$DATABASE_URL" > /usr/local/bin/database-cli && chmod +x /usr/local/bin/database-cli
 
-WORKDIR /family-chores
+WORKDIR .
 
-COPY --from=production-deps /family-chores/node_modules /family-chores/node_modules
-COPY --from=build /family-chores/node_modules/.prisma /family-chores/node_modules/.prisma
+COPY --from=production-deps ./node_modules ./node_modules
+COPY --from=build ./node_modules/.prisma ./node_modules/.prisma
 
-COPY --from=build /family-chores/build /family-chores/build
-COPY --from=build /family-chores/public /family-chores/public
-COPY --from=build /family-chores/package.json /family-chores/package.json
-COPY --from=build /family-chores/start.sh /family-chores/start.sh
-COPY --from=build /family-chores/prisma /family-chores/prisma
+COPY --from=build ./build ./build
+COPY --from=build ./public ./public
+COPY --from=build ./package.json ./package.json
+COPY --from=build ./start.sh ./start.sh
+COPY --from=build ./prisma ./prisma
 
 ENTRYPOINT [ "./start.sh" ]
