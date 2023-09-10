@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,24 +16,21 @@ model Chore {
   order        Int            @default(1)
   icon         String         @default("")
   timeOfDay    Int            @default(1)
-  // this is a bitwise of the days enum
   repeat       Int
   startDate    String?
   endDate      String?
-  person       Person?        @relation(fields: [personId], references: [id])
   personId     String?
+  person       Person?        @relation(fields: [personId], references: [id])
   chore_status Chore_Status[]
 }
 
-// when the chore is completed/uncompleted this will be created for the day it was done
-// this record will only be created once per day
 model Chore_Status {
   id         Int     @id @default(autoincrement())
-  chore      Chore   @relation(fields: [choreId], references: [id], onDelete: Cascade)
   choreId    String
   date       String
   pointValue Int     @default(0)
   completed  Boolean @default(false)
+  chore      Chore   @relation(fields: [choreId], references: [id], onDelete: Cascade)
 }
 
 model Person {
@@ -45,17 +39,6 @@ model Person {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   color     String   @default("")
-  chores    Chore[]
   order     Int      @default(1)
-  // userId    String
-  // user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chores    Chore[]
 }
-
-// model User {
-//   id           String   @id @default(uuid())
-//   createdAt    DateTime @default(now())
-//   updatedAt    DateTime @updatedAt
-//   username     String   @unique
-//   passwordHash String
-//   people       Person[]
-// }

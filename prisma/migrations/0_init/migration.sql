@@ -34,3 +34,4 @@ CREATE TABLE "Person" (
     "color" TEXT NOT NULL DEFAULT '',
     "order" INTEGER NOT NULL DEFAULT 1
 );
+
