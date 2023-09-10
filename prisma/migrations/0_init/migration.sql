@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "Chore" (
+CREATE TABLE "Chore" IF NOT EXISTS (
     "id" TEXT NOT NULL PRIMARY KEY,
     "task" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -16,7 +16,7 @@ CREATE TABLE "Chore" (
 );
 
 -- CreateTable
-CREATE TABLE "Chore_Status" (
+CREATE TABLE "Chore_Status" IF NOT EXISTS (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "choreId" TEXT NOT NULL,
     "date" TEXT NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE "Chore_Status" (
 );
 
 -- CreateTable
-CREATE TABLE "Person" (
+CREATE TABLE "Person" IF NOT EXISTS (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
