@@ -54,7 +54,7 @@ export const loader = async () => {
 
             return y.personId === x.id &&
               (y.repeat === 0 ||
-                IsDayChecked(y.repeat, Object.values(DAY)[d.getDay() - 1]))
+                IsDayChecked(y.repeat, Object.values(DAY)[d.getDay()]))
               ? [{ ...y, status }]
               : [];
           }),
