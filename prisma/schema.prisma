@@ -11,19 +11,19 @@ datasource db {
 }
 
 model Chore {
-  id           String        @id @default(uuid())
+  id           String         @id @default(uuid())
   task         String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  pointValue   Int           @default(1)
-  order        Int           @default(1)
-  icon         String        @default("")
-  timeOfDay    Int        @default(1)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  pointValue   Int            @default(1)
+  order        Int            @default(1)
+  icon         String         @default("")
+  timeOfDay    Int            @default(1)
   // this is a bitwise of the days enum
-  repeat    Int
+  repeat       Int
   startDate    String?
   endDate      String?
-  person       Person?       @relation(fields: [personId], references: [id])
+  person       Person?        @relation(fields: [personId], references: [id])
   personId     String?
   chore_status Chore_Status[]
 }
@@ -31,12 +31,12 @@ model Chore {
 // when the chore is completed/uncompleted this will be created for the day it was done
 // this record will only be created once per day
 model Chore_Status {
-  id        Int      @id @default(autoincrement())
-  chore     Chore    @relation(fields: [choreId], references: [id], onDelete: Cascade)
-  choreId   String
-  date      String
-  pointValue  Int @default(0)
-  completed Boolean  @default(false)
+  id         Int     @id @default(autoincrement())
+  chore      Chore   @relation(fields: [choreId], references: [id], onDelete: Cascade)
+  choreId    String
+  date       String
+  pointValue Int     @default(0)
+  completed  Boolean @default(false)
 }
 
 model Person {
@@ -47,4 +47,15 @@ model Person {
   color     String   @default("")
   chores    Chore[]
   order     Int      @default(1)
+  // userId    String
+  // user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+// model User {
+//   id           String   @id @default(uuid())
+//   createdAt    DateTime @default(now())
+//   updatedAt    DateTime @updatedAt
+//   username     String   @unique
+//   passwordHash String
+//   people       Person[]
+// }

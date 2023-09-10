@@ -25,6 +25,7 @@
     "react-use": "^17.4.0"
   },
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.4.9",
     "@prisma/client": "^4.15.0",
     "@remix-run/dev": "^1.17.0",
     "@remix-run/eslint-config": "^1.17.0",

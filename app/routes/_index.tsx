@@ -158,6 +158,7 @@ export default function Index() {
           Refresh
         </Button>
         <Button href="chore/create">+ Add</Button>
+        <Button href="person/create">+ Person</Button>
       </ButtonGroup>
     </Container>
   );
