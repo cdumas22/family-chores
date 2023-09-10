@@ -11,7 +11,7 @@ export let action: ActionFunction = async ({ request, params }) => {
     const data = await request.formData();
     const { order, ...person } = Object.fromEntries(data) as unknown as Person;
 
-    const newPerson = await prisma.person.create({
+    await prisma.person.create({
       data: {
         ...person,
         order: Number(order),
@@ -20,7 +20,7 @@ export let action: ActionFunction = async ({ request, params }) => {
       },
     });
 
-    return redirect(`/person/${newPerson.id}`);
+    return redirect(`/`);
   }
 };
 
