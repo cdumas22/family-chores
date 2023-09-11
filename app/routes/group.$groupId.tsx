@@ -154,24 +154,6 @@ export default function Index() {
           <PersonCard key={person.id} person={person} />
         ))}
       </Row>
-      <ButtonGroup
-        style={{
-          position: "fixed",
-          bottom: 0,
-          right: 0,
-          margin: "1rem",
-          opacity: 0.5,
-        }}
-      >
-        <Form action="/logout" method="post">
-          <Button type="submit">Logout</Button>
-        </Form>
-        <Button variant="secondary" href="/">
-          Refresh
-        </Button>
-        <Button href="/chore/create">+ Add</Button>
-        <Button href="/person/create">+ Person</Button>
-      </ButtonGroup>
     </Container>
   );
 }

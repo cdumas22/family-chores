@@ -15,7 +15,7 @@ export const loader = async ({ request }: LoaderArgs) => {
   }
 
   if (!group) {
-    redirect(`/group/create`);
+    return redirect(`/group/create`);
   }
 
   return redirect(`/group/${group?.id}`);

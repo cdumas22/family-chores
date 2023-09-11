@@ -29,7 +29,7 @@ export let action: ActionFunction = async ({ request, params }) => {
     if (isDefault) {
       await prisma.group.updateMany({
         where: { userId },
-        data: { isDefault: false },
+        data: { isDefault: false, updatedAt: new Date() },
       });
     }
     await prisma.group.create({

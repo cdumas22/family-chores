@@ -56,6 +56,10 @@ export async function getUserId(request: Request) {
   return userId;
 }
 
+export async function isAuthenticated(request: Request) {
+  return (await getUserId(request)) != null;
+}
+
 export async function requireUserId(
   request: Request,
   redirectTo: string = new URL(request.url).pathname
