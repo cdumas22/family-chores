@@ -26,16 +26,6 @@ type Chore = Prisma.ChoreGetPayload<{}>;
 export let action: ActionFunction = async ({ request, params }) => {
   if (request.method === "POST") {
     const data = await request.formData();
-    const {
-      repeat,
-      order,
-      timeOfDay,
-      pointValue,
-      startDate,
-      endDate,
-      ...chore
-    } = Object.fromEntries(data) as unknown as Chore;
-
     const todo = await prisma.chore.findUnique({
       where: {
         id: params.choreId,
@@ -50,22 +40,43 @@ export let action: ActionFunction = async ({ request, params }) => {
       );
     }
 
-    await prisma.chore.update({
-      where: {
-        id: todo.id,
-      },
-      data: {
-        ...chore,
-        repeat: Number(repeat),
-        timeOfDay: Number(timeOfDay),
-        order: Number(order),
-        pointValue: Number(pointValue),
-        startDate: startDate ? parseISO(startDate).valueOf().toString() : null,
-        endDate: endDate ? parseISO(endDate).valueOf().toString() : null,
-        updatedAt: new Date(),
-      } as Chore,
-    });
-    return redirect(`/person/${chore.personId}`);
+    if (data.get("undelete")) {
+      await prisma.chore.update({
+        data: { deletedAt: null },
+        where: { id: params.choreId },
+      });
+      return json({});
+    } else {
+      const {
+        repeat,
+        order,
+        timeOfDay,
+        pointValue,
+        startDate,
+        endDate,
+        personId,
+        ...chore
+      } = Object.fromEntries(data) as unknown as Chore;
+
+      await prisma.chore.update({
+        where: {
+          id: todo.id,
+        },
+        data: {
+          ...chore,
+          repeat: Number(repeat),
+          timeOfDay: Number(timeOfDay),
+          order: Number(order),
+          pointValue: Number(pointValue),
+          startDate: startDate
+            ? parseISO(startDate).valueOf().toString()
+            : null,
+          endDate: endDate ? parseISO(endDate).valueOf().toString() : null,
+          updatedAt: new Date(),
+        } as Chore,
+      });
+      return redirect(`/person/${chore.personId}`);
+    }
   }
   if (request.method === "DELETE") {
     const deletedAt = startOfDay(new Date()).valueOf().toString();
@@ -100,10 +111,18 @@ export default () => {
         <Col>
           <Form method="POST">
             <EditChore chore={chore as any} people={people as any} />
-            <Button type="submit">Save</Button>
-            <Button variant="danger" type="submit" formMethod="DELETE">
-              Delete
-            </Button>
+            {chore?.deletedAt != null ? (
+              <Button type="submit" name="undelete" value="true">
+                Restore Deleted Chore
+              </Button>
+            ) : (
+              <>
+                <Button type="submit">Save</Button>
+                <Button variant="danger" type="submit" formMethod="DELETE">
+                  Delete
+                </Button>
+              </>
+            )}
           </Form>
         </Col>
       </Row>

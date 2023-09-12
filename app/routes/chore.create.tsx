@@ -77,7 +77,7 @@ export default () => {
       <Row>
         <Col>
           <Form method="POST">
-            <EditChore people={people as any} selectMultiplePeople />
+            <EditChore people={people as any} />
             <Button type="submit">Save</Button>
           </Form>
         </Col>

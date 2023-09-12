@@ -10,18 +10,22 @@ type Person = Prisma.PersonGetPayload<{}>;
 export default function EditChore({
   chore,
   people,
-  selectMultiplePeople = false,
 }: {
   chore?: Chore;
   people: Person[];
-  selectMultiplePeople?: boolean;
 }) {
   const [repeat, setRepeat] = useState(chore?.repeat ?? 0);
+  const disabled = chore?.deletedAt != null;
 
   return (
     <>
       <FloatingLabel controlId="chore.task" label="Task" className="mb-3">
-        <Form.Control required name="task" defaultValue={chore?.task} />
+        <Form.Control
+          required
+          name="task"
+          defaultValue={chore?.task}
+          disabled={disabled}
+        />
       </FloatingLabel>
       <FloatingLabel
         controlId="chore.icon"
@@ -29,11 +33,15 @@ export default function EditChore({
         className="mb-3"
         placeholder="use an emoji icon"
       >
-        <Form.Control name="icon" defaultValue={chore?.icon} />
+        <Form.Control
+          name="icon"
+          defaultValue={chore?.icon}
+          disabled={disabled}
+        />
       </FloatingLabel>
       <Form.Group className="mb-3" controlId="chore.person">
         <Form.Label>Person</Form.Label>
-        {selectMultiplePeople ? (
+        {chore == null && (
           <>
             {people.map((person) => (
               <Form.Check
@@ -46,18 +54,6 @@ export default function EditChore({
               />
             ))}
           </>
-        ) : (
-          <Form.Select
-            required
-            name="personId"
-            defaultValue={chore?.personId ?? ""}
-          >
-            {people.map((person) => (
-              <option key={person.id} value={person.id}>
-                {person.name}
-              </option>
-            ))}
-          </Form.Select>
         )}
       </Form.Group>
       <FloatingLabel
@@ -71,6 +67,7 @@ export default function EditChore({
           type="number"
           name="pointValue"
           defaultValue={chore?.pointValue ?? 1}
+          disabled={disabled}
         />
       </FloatingLabel>
       <Form.Group className="mb-3" controlId="chore.timeOfDay">
@@ -79,6 +76,7 @@ export default function EditChore({
           required
           name="timeOfDay"
           defaultValue={chore?.timeOfDay ?? TIME_OF_DAY.morning}
+          disabled={disabled}
         >
           <option value={TIME_OF_DAY.morning}>Morning</option>
           <option value={TIME_OF_DAY.afternoon}>Afternoon</option>
@@ -91,6 +89,7 @@ export default function EditChore({
           type="number"
           min="1"
           defaultValue={chore?.order || 1}
+          disabled={disabled}
         />
       </FloatingLabel>
       <FloatingLabel
@@ -101,6 +100,7 @@ export default function EditChore({
         <Form.Control
           name="startDate"
           type="date"
+          disabled={disabled}
           defaultValue={
             chore?.startDate
               ? format(Number(chore?.startDate), "yyyy-MM-dd")
@@ -116,6 +116,7 @@ export default function EditChore({
         <Form.Control
           name="endDate"
           type="date"
+          disabled={disabled}
           defaultValue={
             chore?.endDate ? format(Number(chore?.endDate), "yyyy-MM-dd") : ""
           }
@@ -133,10 +134,12 @@ export default function EditChore({
         />
         {Object.entries(DAY).map(([day, value]) => (
           <Form.Check
+            key={day}
             label={day}
             value={day}
             checked={IsDayChecked(repeat, value)}
             id={`checkbox-${day}`}
+            disabled={disabled}
             onChange={(e) =>
               setRepeat(e.target.checked ? repeat | value : repeat & ~value)
             }

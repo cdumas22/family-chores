@@ -6,12 +6,20 @@ import {
   redirect,
 } from "@remix-run/node";
 import { type V2_MetaFunction, useLoaderData } from "@remix-run/react";
-import { Button, Col, Container, Row, ListGroup } from "react-bootstrap";
+import {
+  Button,
+  Col,
+  Container,
+  Row,
+  ListGroup,
+  Tooltip,
+  OverlayTrigger,
+} from "react-bootstrap";
 import prisma from "~/lib/db.server";
 import sortBy from "lodash/sortBy";
 import { ChoreLabel } from "~/components/PersonCard";
 import { format } from "date-fns";
-import { DAY, IsDayChecked } from "~/utils/days";
+import { DAY, IsDayChecked, TIME_OF_DAY } from "~/utils/days";
 import EditPerson from "~/components/EditPerson";
 import { requireUserId } from "~/utils/session.server";
 
@@ -76,15 +84,34 @@ export default () => {
             {sortBy(person.chores, ["timeOfDay", "order"]).map((chore) => (
               <ListGroup.Item
                 key={chore.id}
-                disabled={chore.deletedAt != null}
                 className="d-flex justify-content-between align-items-center"
               >
                 <div>
                   <ChoreLabel chore={chore} />
                   <Row>
+                    {chore.deletedAt != null && (
+                      <Col>
+                        <OverlayTrigger
+                          placement="bottom"
+                          overlay={
+                            <Tooltip id="button-tooltip-2">
+                              Deleted on:{" "}
+                              {format(
+                                new Date(Number(chore.deletedAt)),
+                                "PPPP"
+                              )}
+                            </Tooltip>
+                          }
+                        >
+                          <div className="badge rounded-pill bg-danger">
+                            Deleted
+                          </div>
+                        </OverlayTrigger>
+                      </Col>
+                    )}
                     <Col>
                       <div className="badge rounded-pill bg-secondary">
-                        {chore.timeOfDay}
+                        {TIME_OF_DAY[chore.timeOfDay]}
                       </div>
                     </Col>
                     <Col>
@@ -130,11 +157,9 @@ export default () => {
                     </Col>
                   </Row>
                 </div>
-                {chore.deletedAt == null && (
-                  <Button variant="secondary" href={`/chore/${chore.id}`}>
-                    ✏️
-                  </Button>
-                )}
+                <Button variant="secondary" href={`/chore/${chore.id}`}>
+                  ✏️
+                </Button>
               </ListGroup.Item>
             ))}
           </ListGroup>
