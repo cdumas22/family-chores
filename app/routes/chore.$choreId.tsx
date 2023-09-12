@@ -9,7 +9,7 @@ import { Form, type V2_MetaFunction, useLoaderData } from "@remix-run/react";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import EditChore from "~/components/EditChore";
 import prisma from "~/lib/db.server";
-import { parseISO } from "date-fns";
+import { parseISO, startOfDay } from "date-fns";
 import { requireUserId } from "~/utils/session.server";
 
 export const loader = async ({ params, request }: LoaderArgs) => {
@@ -68,7 +68,11 @@ export let action: ActionFunction = async ({ request, params }) => {
     return redirect(`/person/${chore.personId}`);
   }
   if (request.method === "DELETE") {
-    await prisma.chore.delete({ where: { id: params.choreId } });
+    const deletedAt = startOfDay(new Date()).valueOf().toString();
+    await prisma.chore.update({
+      data: { deletedAt },
+      where: { id: params.choreId },
+    });
   }
   return redirect(`/`);
 

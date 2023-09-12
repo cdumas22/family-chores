@@ -47,7 +47,17 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   const chores = await prisma.chore.findMany({
     where: {
       personId: { in: people.map((x) => x.id) },
-      startDate: {},
+      createdAt: {
+        lte: endOfDay(d),
+      },
+      OR: [
+        {
+          deletedAt: {
+            gt: d.valueOf().toString(),
+          },
+        },
+        { deletedAt: null },
+      ],
     },
   });
 

@@ -76,6 +76,7 @@ export default () => {
             {sortBy(person.chores, ["timeOfDay", "order"]).map((chore) => (
               <ListGroup.Item
                 key={chore.id}
+                disabled={chore.deletedAt != null}
                 className="d-flex justify-content-between align-items-center"
               >
                 <div>
@@ -129,9 +130,11 @@ export default () => {
                     </Col>
                   </Row>
                 </div>
-                <Button variant="secondary" href={`/chore/${chore.id}`}>
-                  ✏️
-                </Button>
+                {chore.deletedAt == null && (
+                  <Button variant="secondary" href={`/chore/${chore.id}`}>
+                    ✏️
+                  </Button>
+                )}
               </ListGroup.Item>
             ))}
           </ListGroup>

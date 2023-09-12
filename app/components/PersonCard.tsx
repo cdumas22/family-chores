@@ -9,7 +9,7 @@ import { useChoreContext } from "~/root";
 import type { personLoader } from "~/routes/group.$groupId";
 import { TIME_OF_DAY } from "~/utils/days";
 
-type Person = SerializeFrom<personLoader>[number];
+type Person = SerializeFrom<personLoader>["people"][number];
 
 export function ChoreLabel({
   chore,
@@ -39,10 +39,12 @@ export function ChoreLabel({
   );
 }
 
-export default function ({ person }: { person: Person }) {
+export default function PersonCard({ person }: { person: Person }) {
   const allChores = Object.values(person.chores).flat();
+  console.log(person.name, allChores);
   const done = allChores.filter((x) => !!x.status?.completed);
-  const percentage = (done.length / allChores.length) * 100;
+  const percentage =
+    done.length === 0 ? 0 : (done.length / allChores.length) * 100;
   const progressStyles = { width: "115px", margin: "auto" };
   const choreContext = useChoreContext();
   const listStyles = {
