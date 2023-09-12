@@ -1,24 +1,39 @@
 import {
-  ActionFunction,
-  LoaderArgs,
-  V2_MetaFunction,
+  type ActionFunction,
+  type LoaderArgs,
+  type V2_MetaFunction,
   json,
 } from "@remix-run/node";
-import { Form, useLoaderData } from "@remix-run/react";
-import { Button, ButtonGroup, Container, Row } from "react-bootstrap";
+import { useLoaderData, useSearchParams } from "@remix-run/react";
+import { addDays, endOfDay, format, startOfDay } from "date-fns";
+import groupBy from "lodash/groupBy";
+import orderBy from "lodash/orderBy";
+import {
+  Badge,
+  Button,
+  ButtonGroup,
+  ButtonToolbar,
+  Col,
+  Container,
+  Row,
+  Stack,
+} from "react-bootstrap";
 import ChoreComplete from "~/components/ChoreComplete";
 import PersonCard from "~/components/PersonCard";
 import prisma from "~/lib/db.server";
 import { useChoreContext } from "~/root";
-import { endOfDay, parse, startOfDay } from "date-fns";
 import { DAY, IsDayChecked } from "~/utils/days";
-import groupBy from "lodash/groupBy";
-import orderBy from "lodash/orderBy";
 import { requireUserId } from "~/utils/session.server";
 
 export type personLoader = typeof loader;
 export const loader = async ({ request, params }: LoaderArgs) => {
   const userId = await requireUserId(request);
+  const url = new URL(request.url);
+  const requestDate = new URLSearchParams(url.search).get("date");
+  const d = startOfDay(
+    requestDate ? new Date(Number(requestDate)) : new Date()
+  );
+  console.log("LOAD", requestDate, d);
   const groups = await prisma.group.findMany({
     where: { userId },
   });
@@ -35,7 +50,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
       startDate: {},
     },
   });
-  const d = startOfDay(new Date());
+
   const data = {
     people,
     chores,
@@ -47,7 +62,16 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     }),
   };
 
+  const today = startOfDay(new Date());
+  const next = addDays(d, 1);
+  const previous = addDays(d, -1);
   return json({
+    dates: {
+      next: next > today ? null : next.valueOf().toString(),
+      current: d.valueOf().toString(),
+      today: next > today ? null : today.valueOf().toString(),
+      previous: previous.valueOf().toString(),
+    },
     groups,
     group,
     people: data.people.map((x) => ({
@@ -89,7 +113,11 @@ export const meta: V2_MetaFunction = () => {
 
 export let action: ActionFunction = async ({ request }) => {
   await requireUserId(request);
-  const d = startOfDay(new Date());
+  const url = new URL(request.url);
+  const requestDate = new URLSearchParams(url.search).get("date");
+  const d = startOfDay(
+    requestDate ? new Date(Number(requestDate)) : new Date()
+  );
 
   const data = new URLSearchParams(await request.text());
   const completeTodoId = data.get("complete");
@@ -135,8 +163,15 @@ export let action: ActionFunction = async ({ request }) => {
 };
 
 export default function Index() {
-  const { group, people } = useLoaderData<personLoader>();
+  const { people, dates } = useLoaderData<personLoader>();
+  let [searchParams, setSearchParams] = useSearchParams();
   const choreContext = useChoreContext();
+
+  function setDay(date?: string | null) {
+    if (date) {
+      setSearchParams({ date });
+    }
+  }
 
   return (
     <Container
@@ -146,13 +181,51 @@ export default function Index() {
         padding: "1rem",
         overflowY: "hidden",
         overflowX: "auto",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       {choreContext.choreComplete && <ChoreComplete />}
+
       <Row style={{ flexWrap: "nowrap" }} className="h-100">
         {people.map((person) => (
           <PersonCard key={person.id} person={person} />
         ))}
+      </Row>
+      <Row className="mt-3">
+        <Col>
+          <ButtonToolbar className="justify-content-between">
+            <ButtonGroup size="sm">
+              <Button
+                variant="secondary"
+                onClick={() => setDay(dates.previous)}
+              >
+                ◀︎ Previous Day
+              </Button>
+              <Button
+                variant="primary"
+                disabled={dates.today == null}
+                onClick={() => setDay(dates.today)}
+              >
+                Today
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={dates.next == null}
+                onClick={() => setDay(dates.next)}
+              >
+                Next Day ▶︎
+              </Button>
+            </ButtonGroup>
+            <Stack direction="horizontal" gap={4}>
+              <h5 className="m-0">
+                <Badge bg="secondary">
+                  {format(new Date(Number(dates.current)), "PPPP")}
+                </Badge>
+              </h5>
+            </Stack>
+          </ButtonToolbar>
+        </Col>
       </Row>
     </Container>
   );

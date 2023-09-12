@@ -58,8 +58,11 @@ export default function App() {
       </head>
       <body>
         <SSRProvider>
-          <Stack>
-            <Sidebar authenticated={authenticated} groups={groups} />
+          <Stack direction="horizontal">
+            <Sidebar
+              authenticated={authenticated}
+              groups={groups as unknown as Group[]}
+            />
             <Outlet context={choreContext} />
           </Stack>
         </SSRProvider>

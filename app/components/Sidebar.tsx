@@ -49,10 +49,15 @@ export function Sidebar({
   return (
     <>
       <div
-        style={{ width: "40px", borderRight: "solid 1px black" }}
+        style={{
+          borderRight: "solid 1px black",
+          height: "100vh",
+        }}
         onClick={handleShow}
+        role="button"
+        className="bg-secondary text-light px-2 py-4"
       >
-        {">>"}
+        {"▶︎"}
       </div>
 
       <Offcanvas show={show} onHide={handleClose}>
