@@ -1,15 +1,16 @@
 import { type Prisma } from "@prisma/client";
 import {
-  type ActionFunction,
-  type LoaderArgs,
   json,
   redirect,
+  type ActionFunction,
+  type LoaderArgs,
 } from "@remix-run/node";
-import { Form, type V2_MetaFunction, useLoaderData } from "@remix-run/react";
+import { Form, useLoaderData, type V2_MetaFunction } from "@remix-run/react";
+import { format, startOfDay } from "date-fns";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import EditChore from "~/components/EditChore";
 import prisma from "~/lib/db.server";
-import { parseISO, startOfDay } from "date-fns";
+import { dateWithOffset } from "~/utils/date.server";
 import { requireUserId } from "~/utils/session.server";
 
 export const loader = async ({ params, request }: LoaderArgs) => {
@@ -68,10 +69,8 @@ export let action: ActionFunction = async ({ request, params }) => {
           timeOfDay: Number(timeOfDay),
           order: Number(order),
           pointValue: Number(pointValue),
-          startDate: startDate
-            ? parseISO(startDate).valueOf().toString()
-            : null,
-          endDate: endDate ? parseISO(endDate).valueOf().toString() : null,
+          startDate: startDate ? startDate : null,
+          endDate: endDate ? endDate : null,
           updatedAt: new Date(),
         } as Chore,
       });
@@ -79,9 +78,11 @@ export let action: ActionFunction = async ({ request, params }) => {
     }
   }
   if (request.method === "DELETE") {
-    const deletedAt = startOfDay(new Date()).valueOf().toString();
+    const deletedAt = startOfDay(new Date());
     await prisma.chore.update({
-      data: { deletedAt },
+      data: {
+        deletedAt: format(dateWithOffset(request, new Date()), "yyyy-MM-dd"),
+      },
       where: { id: params.choreId },
     });
   }

@@ -42,10 +42,8 @@ export const action: ActionFunction = async ({ request, params }) => {
           order: Number(order),
           pointValue: Number(pointValue),
           timeOfDay: Number(timeOfDay),
-          startDate: startDate
-            ? new Date(startDate).valueOf().toString()
-            : null,
-          endDate: endDate ? new Date(endDate).valueOf().toString() : null,
+          startDate: startDate ? startDate : null,
+          endDate: endDate ? endDate : null,
           createdAt: new Date(),
           updatedAt: new Date(),
         } as Chore,

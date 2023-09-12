@@ -96,10 +96,7 @@ export default () => {
                           overlay={
                             <Tooltip id="button-tooltip-2">
                               Deleted on:{" "}
-                              {format(
-                                new Date(Number(chore.deletedAt)),
-                                "PPPP"
-                              )}
+                              {format(new Date(chore.deletedAt), "PPPP")}
                             </Tooltip>
                           }
                         >
@@ -123,17 +120,11 @@ export default () => {
                       {(!!chore.startDate || !!chore.endDate) && (
                         <div>
                           {chore.startDate
-                            ? format(
-                                new Date(Number(chore.startDate)),
-                                "MMM dd, yyyy"
-                              )
+                            ? format(new Date(chore.startDate), "MMM dd, yyyy")
                             : "No start"}{" "}
                           -{" "}
                           {chore.endDate
-                            ? format(
-                                new Date(Number(chore.endDate)),
-                                "MMM dd, yyyy"
-                              )
+                            ? format(new Date(chore.endDate), "MMM dd, yyyy")
                             : "No end"}
                         </div>
                       )}

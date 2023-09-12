@@ -1,11 +1,11 @@
 import {
+  json,
   type ActionFunction,
   type LoaderArgs,
   type V2_MetaFunction,
-  json,
 } from "@remix-run/node";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
-import { addDays, endOfDay, format, startOfDay } from "date-fns";
+import { addDays, endOfDay, format } from "date-fns";
 import groupBy from "lodash/groupBy";
 import orderBy from "lodash/orderBy";
 import {
@@ -22,6 +22,7 @@ import ChoreComplete from "~/components/ChoreComplete";
 import PersonCard from "~/components/PersonCard";
 import prisma from "~/lib/db.server";
 import { useChoreContext } from "~/root";
+import { dateWithOffset, formatISODateWithOffset } from "~/utils/date.server";
 import { DAY, IsDayChecked } from "~/utils/days";
 import { requireUserId } from "~/utils/session.server";
 
@@ -30,10 +31,11 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   const userId = await requireUserId(request);
   const url = new URL(request.url);
   const requestDate = new URLSearchParams(url.search).get("date");
-  const d = startOfDay(
-    requestDate ? new Date(Number(requestDate)) : new Date()
-  );
-  console.log("LOAD", requestDate, d);
+  const dateOnly = requestDate
+    ? requestDate
+    : format(dateWithOffset(request, new Date()), "yyyy-MM-dd");
+  console.log("LOAD", requestDate, dateOnly);
+
   const groups = await prisma.group.findMany({
     where: { userId },
   });
@@ -48,12 +50,12 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     where: {
       personId: { in: people.map((x) => x.id) },
       createdAt: {
-        lte: endOfDay(d),
+        lte: endOfDay(new Date(dateOnly + "T00:00:00")),
       },
       OR: [
         {
           deletedAt: {
-            gt: d.valueOf().toString(),
+            gt: dateOnly,
           },
         },
         { deletedAt: null },
@@ -66,21 +68,28 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     chores,
     choreStatus: await prisma.chore_Status.findMany({
       where: {
-        date: d.valueOf().toString(),
+        date: dateOnly,
         choreId: { in: chores.map((x) => x.id) },
       },
     }),
   };
 
-  const today = startOfDay(new Date());
-  const next = addDays(d, 1);
-  const previous = addDays(d, -1);
+  const today = format(dateWithOffset(request, new Date()), "yyyy-MM-dd");
+  const next = format(
+    addDays(new Date(dateOnly + "T00:00:00"), 1),
+    "yyyy-MM-dd"
+  );
+  const previous = format(
+    addDays(new Date(dateOnly + "T00:00:00"), -1),
+    "yyyy-MM-dd"
+  );
+  const current = dateOnly;
   return json({
     dates: {
-      next: next > today ? null : next.valueOf().toString(),
-      current: d.valueOf().toString(),
-      today: next > today ? null : today.valueOf().toString(),
-      previous: previous.valueOf().toString(),
+      next: next > today ? null : next,
+      current,
+      today: next > today ? null : today,
+      previous: previous,
     },
     groups,
     group,
@@ -93,16 +102,16 @@ export const loader = async ({ request, params }: LoaderArgs) => {
             if (
               y.startDate != null &&
               y.endDate != null &&
-              !(
-                d.valueOf() >= Number(y.startDate) &&
-                new Date() <= endOfDay(new Date(Number(y.endDate)))
-              )
+              !(current >= y.startDate && next < y.endDate)
             )
               return [];
 
             return y.personId === x.id &&
               (y.repeat === 0 ||
-                IsDayChecked(y.repeat, Object.values(DAY)[d.getDay()]))
+                IsDayChecked(
+                  y.repeat,
+                  Object.values(DAY)[new Date(dateOnly + "T00:00:00").getDay()]
+                ))
               ? [{ ...y, status }]
               : [];
           }),
@@ -125,9 +134,10 @@ export let action: ActionFunction = async ({ request }) => {
   await requireUserId(request);
   const url = new URL(request.url);
   const requestDate = new URLSearchParams(url.search).get("date");
-  const d = startOfDay(
-    requestDate ? new Date(Number(requestDate)) : new Date()
-  );
+  const d = requestDate
+    ? requestDate
+    : formatISODateWithOffset(request, new Date());
+  const dateOnly = d.slice(0, 10);
 
   const data = new URLSearchParams(await request.text());
   const completeTodoId = data.get("complete");
@@ -141,7 +151,7 @@ export let action: ActionFunction = async ({ request }) => {
   const choreStatus = await prisma.chore_Status.findFirst({
     where: {
       choreId: completeTodoId,
-      date: d.valueOf().toString(),
+      date: dateOnly,
     },
   });
 
@@ -152,7 +162,7 @@ export let action: ActionFunction = async ({ request }) => {
     });
     const created = await prisma.chore_Status.create({
       data: {
-        date: d.valueOf().toString(),
+        date: dateOnly,
         choreId: completeTodoId,
         pointValue: chore?.pointValue,
         completed: true,
@@ -197,7 +207,7 @@ export default function Index() {
     >
       {choreContext.choreComplete && <ChoreComplete />}
 
-      <Row style={{ flexWrap: "nowrap", height: "calc(100% - 32px)" }}>
+      <Row style={{ flexWrap: "nowrap", height: "calc(100% - 48px)" }}>
         {people.map((person) => (
           <PersonCard key={person.id} person={person} />
         ))}
@@ -239,7 +249,7 @@ export default function Index() {
             <Stack direction="horizontal" gap={4}>
               <h5 className="m-0">
                 <Badge bg="secondary">
-                  {format(new Date(Number(dates.current)), "PPPP")}
+                  {format(new Date(dates.current + "T00:00:00"), "PPPP")}
                 </Badge>
               </h5>
             </Stack>

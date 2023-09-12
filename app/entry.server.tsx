@@ -91,6 +91,23 @@ function handleBrowserRequest(
   responseHeaders: Headers,
   remixContext: EntryContext
 ) {
+  if (!request.headers.get("cookie")?.includes("clockOffset")) {
+    const script = `
+    document.cookie = 'clockOffset=' + (new Date().getTimezoneOffset() * -1) + '; path=/';
+    window.location.reload();
+  `;
+    return new Response(
+      `<html><body><script>${script}</script></body></html>`,
+      {
+        headers: {
+          "Content-Type": "text/html",
+          "Set-Cookie": "clockOffset=0; path=/",
+          Refresh: `0; url=${request.url}`,
+        },
+      }
+    );
+  }
+
   return new Promise((resolve, reject) => {
     let shellRendered = false;
     const { pipe, abort } = renderToPipeableStream(

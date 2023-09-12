@@ -107,11 +107,7 @@ export default function EditChore({
           name="startDate"
           type="date"
           disabled={disabled}
-          defaultValue={
-            chore?.startDate
-              ? format(Number(chore?.startDate), "yyyy-MM-dd")
-              : ""
-          }
+          defaultValue={chore?.startDate ?? ""}
         />
       </FloatingLabel>
       <FloatingLabel
@@ -123,9 +119,7 @@ export default function EditChore({
           name="endDate"
           type="date"
           disabled={disabled}
-          defaultValue={
-            chore?.endDate ? format(Number(chore?.endDate), "yyyy-MM-dd") : ""
-          }
+          defaultValue={chore?.endDate ?? ""}
         />
       </FloatingLabel>
       <Form.Group>
