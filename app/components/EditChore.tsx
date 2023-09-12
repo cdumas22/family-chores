@@ -41,7 +41,7 @@ export default function EditChore({
       </FloatingLabel>
       <Form.Group className="mb-3" controlId="chore.person">
         <Form.Label>Person</Form.Label>
-        {chore == null && (
+        {chore == null ? (
           <>
             {people.map((person) => (
               <Form.Check
@@ -54,6 +54,12 @@ export default function EditChore({
               />
             ))}
           </>
+        ) : (
+          <input
+            type="hidden"
+            name="personId"
+            value={chore.personId?.toString()}
+          />
         )}
       </Form.Group>
       <FloatingLabel

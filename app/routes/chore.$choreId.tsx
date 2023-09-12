@@ -75,7 +75,7 @@ export let action: ActionFunction = async ({ request, params }) => {
           updatedAt: new Date(),
         } as Chore,
       });
-      return redirect(`/person/${chore.personId}`);
+      return redirect(`/person/${personId}`);
     }
   }
   if (request.method === "DELETE") {

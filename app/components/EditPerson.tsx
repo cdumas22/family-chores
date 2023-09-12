@@ -11,7 +11,7 @@ export default function EditPerson({
 }) {
   return (
     <Form method="POST">
-      <FloatingLabel controlId="person.name" label="Task" className="mb-3">
+      <FloatingLabel controlId="person.name" label="Name" className="mb-3">
         <BForm.Control required name="name" defaultValue={person?.name} />
       </FloatingLabel>
       <FloatingLabel controlId="person.color" label="Color" className="mb-3">
