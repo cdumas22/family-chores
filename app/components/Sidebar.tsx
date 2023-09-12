@@ -1,7 +1,7 @@
 import type { Group } from "@prisma/client";
 import { Form } from "@remix-run/react";
 import { useState } from "react";
-import { Button, ListGroup } from "react-bootstrap";
+import { Button, ListGroup, Stack } from "react-bootstrap";
 import Offcanvas from "react-bootstrap/Offcanvas";
 
 type NavItem = {
@@ -65,41 +65,50 @@ export function Sidebar({
           <Offcanvas.Title>Chores Chart</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
-          <ListGroup>
-            {nav.map((n) => (
-              <ListGroup.Item key={n.label} action href={n.href}>
-                {n.label}
-              </ListGroup.Item>
-            ))}
-
-            {authenticated && (
-              <ListGroup.Item action>
-                <Form action="/logout" method="post">
-                  <Button type="submit" variant="plain">
-                    Logout
-                  </Button>
-                </Form>
-              </ListGroup.Item>
-            )}
-          </ListGroup>
-
-          {groups.length > 0 && (
-            <>
-              <h4>Groups</h4>
+          <Stack
+            className="justify-content-between h-100"
+            direction="vertical"
+            gap={4}
+          >
+            <Stack direction="vertical" gap={4}>
               <ListGroup>
-                {groups.map((group) => (
-                  <ListGroup.Item
-                    key={group.id}
-                    action
-                    href={`/group/${group.id}`}
-                    className={group.isDefault ? "active" : ""}
-                  >
-                    {group.groupName}
+                {nav.map((n) => (
+                  <ListGroup.Item key={n.label} action href={n.href}>
+                    {n.label}
                   </ListGroup.Item>
                 ))}
               </ListGroup>
-            </>
-          )}
+
+              {groups.length > 0 && (
+                <>
+                  <h4>Groups</h4>
+                  <ListGroup>
+                    {groups.map((group) => (
+                      <ListGroup.Item
+                        key={group.id}
+                        action
+                        href={`/group/${group.id}`}
+                        className={group.isDefault ? "active" : ""}
+                      >
+                        {group.groupName}
+                      </ListGroup.Item>
+                    ))}
+                  </ListGroup>
+                </>
+              )}
+            </Stack>
+            {authenticated && (
+              <ListGroup>
+                <ListGroup.Item action>
+                  <Form action="/logout" method="post">
+                    <Button type="submit" variant="plain">
+                      Logout
+                    </Button>
+                  </Form>
+                </ListGroup.Item>
+              </ListGroup>
+            )}
+          </Stack>
         </Offcanvas.Body>
       </Offcanvas>
     </>

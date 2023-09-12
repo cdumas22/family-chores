@@ -187,12 +187,21 @@ export default function Index() {
     >
       {choreContext.choreComplete && <ChoreComplete />}
 
-      <Row style={{ flexWrap: "nowrap" }} className="h-100">
+      <Row style={{ flexWrap: "nowrap", height: "calc(100% - 32px)" }}>
         {people.map((person) => (
           <PersonCard key={person.id} person={person} />
         ))}
       </Row>
-      <Row className="mt-3">
+      <Row
+        className="mt-3"
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          margin: "20px 0px 20px 32px",
+        }}
+      >
         <Col>
           <ButtonToolbar className="justify-content-between">
             <ButtonGroup size="sm">

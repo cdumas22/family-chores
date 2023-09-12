@@ -10,9 +10,11 @@ type Person = Prisma.PersonGetPayload<{}>;
 export default function EditChore({
   chore,
   people,
+  selectMultiplePeople = false,
 }: {
   chore?: Chore;
   people: Person[];
+  selectMultiplePeople?: boolean;
 }) {
   const [repeat, setRepeat] = useState(chore?.repeat ?? 0);
 
@@ -31,17 +33,32 @@ export default function EditChore({
       </FloatingLabel>
       <Form.Group className="mb-3" controlId="chore.person">
         <Form.Label>Person</Form.Label>
-        <Form.Select
-          required
-          name="personId"
-          defaultValue={chore?.personId ?? ""}
-        >
-          {people.map((person) => (
-            <option key={person.id} value={person.id}>
-              {person.name}
-            </option>
-          ))}
-        </Form.Select>
+        {selectMultiplePeople ? (
+          <>
+            {people.map((person) => (
+              <Form.Check
+                key={person.id}
+                label={person.name}
+                value={person.id}
+                name="personId"
+                type="checkbox"
+                id={`person-checkbox-${person.id}`}
+              />
+            ))}
+          </>
+        ) : (
+          <Form.Select
+            required
+            name="personId"
+            defaultValue={chore?.personId ?? ""}
+          >
+            {people.map((person) => (
+              <option key={person.id} value={person.id}>
+                {person.name}
+              </option>
+            ))}
+          </Form.Select>
+        )}
       </Form.Group>
       <FloatingLabel
         controlId="chore.pointValue"

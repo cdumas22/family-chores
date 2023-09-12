@@ -72,7 +72,7 @@ export default () => {
             groups={groups as unknown as Group[]}
           />
           <hr />
-          <ListGroup>
+          <ListGroup className="mb-4">
             {sortBy(person.chores, ["timeOfDay", "order"]).map((chore) => (
               <ListGroup.Item
                 key={chore.id}
@@ -135,6 +135,7 @@ export default () => {
               </ListGroup.Item>
             ))}
           </ListGroup>
+          <Button href="/chore/create">Create Chore</Button>
         </Col>
       </Row>
     </Container>
